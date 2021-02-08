@@ -2,6 +2,14 @@
 	import Layout from "$components/Layout.svelte";
 </script>
 
+<svelte:head>
+	<title>Dominik Tarnowski</title>
+	<meta
+		name="description"
+		content="Computer Science Student and Software Developer."
+	/>
+</svelte:head>
+
 <Layout>
 	<h1>Dominik Tarnowski</h1>
 	<p>

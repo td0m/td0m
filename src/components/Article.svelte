@@ -1,31 +1,58 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+
   import Layout from "./Layout.svelte";
 
   export let title: string;
   export let description: string;
   // export let date: Date;
+
+  onMount(() => {
+    import("$components/prism.js");
+  });
+
+  function onLoad() {
+    this.onload = null;
+    this.rel = "stylesheet";
+  }
 </script>
+
+<svelte:head>
+  <title>{title} - Dominik Tarnowski</title>
+  <meta name="description" content={description} />
+
+  <link rel="preload" href="/prism.css" as="style" on:load={onLoad} />
+  <noscript>
+    <link rel="stylesheet" href="/prism.css" />
+  </noscript>
+</svelte:head>
 
 <Layout>
   <h1>{title}</h1>
   <h2 class="description">{description}</h2>
 
-  <slot />
+  <div class="content">
+    <slot />
+  </div>
 
   <div class="spacer" />
   <div class="divider" />
   <h2 style="margin-bottom: 0;">Subscribe</h2>
-  <p style="margin: 0 0 15px">Get notified when I release new articles. No spam.  </p>
+  <p style="margin: 0 0 15px">
+    Get notified when I release new articles. No spam.
+  </p>
 
   <div class="flex">
     <div class="card" />
-    <div class="card">
-      Subscribe
-    </div>
+    <div class="card">Subscribe</div>
   </div>
 </Layout>
 
 <style>
+  /* .content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  } */
+
   h1 {
     margin-bottom: 0;
     font-weight: 400;
@@ -69,7 +96,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.0rem;
+    font-size: 1rem;
     color: var(--c-link);
     text-transform: uppercase;
   }

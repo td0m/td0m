@@ -2,7 +2,7 @@
   import dayjs from "dayjs";
 
   export let url: string;
-  export let name: string;
+  export let title: string;
   export let description: string;
   export let date: Date;
 
@@ -12,7 +12,7 @@
 <div class="row">
   <time>{at}</time>
   <div>
-    <a href={url}>{name}</a>
+    <a href={url}>{title}</a>
     <div>{description}</div>
   </div>
 </div>

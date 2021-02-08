@@ -1,6 +1,7 @@
 :root {
   --t: 255;
   --app-bg: #020713;
+  --app-bg-highlight: #062161;
   --app-c: #ffffff;
   --app-c-alt: #bbbbc9;
   --c-link: #9062db;
@@ -25,10 +26,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+*::selection {
+  background: var(--app-bg-highlight);
+}
+
 code {
   font-family: "Space Mono", monospace;
   color: var(--app-c-alt);
-  font-size: 1.5rem;
+}
+
+pre {
+  box-sizing: border-box;
+  padding: 15px 19px;
+  background-color: rgba(var(--t), var(--t), var(--t), 0.05);
+  border-radius: 8px;
 }
 
 main {
@@ -41,6 +52,10 @@ p {
   color: var(--app-c-alt);
   line-height: 1.67;
   font-size: 1.1rem;
+}
+
+ul, li {
+  color: var(--app-c-alt);
 }
 
 a {
@@ -74,4 +89,26 @@ a:after {
 
 a:hover:after {
   width: 100%;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+p {
+  letter-spacing: -1px;
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: 400;
+}
+
+blockquote {
+  font-size: 1.3rem;
+  border-left: solid 2px rgba(var(--t), var(--t), var(--t), 0.2);
+  margin-left: 0;
+  padding-left: 20px;
 }
