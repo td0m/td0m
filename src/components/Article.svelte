@@ -8,7 +8,8 @@
   // export let date: Date;
 
   onMount(() => {
-    import("$components/prism.js");
+    // timeout to fix not loading when navigating from a different page in production
+    setTimeout(() => import("$components/prism.js"), 200);
   });
 
   function onLoad() {
