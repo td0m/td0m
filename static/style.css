@@ -1,0 +1,77 @@
+:root {
+  --t: 255;
+  --app-bg: #020713;
+  --app-c: #ffffff;
+  --app-c-alt: #bbbbc9;
+  --c-link: #9062db;
+}
+
+:root {
+  font-family: "Space Mono", monospace;
+  font-size: 18px;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  background-color: var(--app-bg);
+  color: var(--app-c);
+}
+
+body {
+  margin: 0;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: "Space Mono", monospace;
+  color: var(--app-c-alt);
+  font-size: 1.5rem;
+}
+
+main {
+  margin: 8vw auto;
+  width: 92%;
+  max-width: 900px;
+}
+
+p {
+  color: var(--app-c-alt);
+  line-height: 1.67;
+  font-size: 1.1rem;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a {
+  position: relative;
+}
+
+a:after, a:before {
+  position: absolute;
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  content: "";
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 1px;
+  background-color: rgba(var(--t), var(--t), var(--t), 0.1);
+}
+
+a:after {
+  width: 0;
+  background-color: currentColor;
+}
+
+a:hover:after {
+  width: 100%;
+}
