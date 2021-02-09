@@ -25,6 +25,7 @@
   nav h1 {
     font-size: 1.6rem;
     font-weight: 400;
+    margin: 0.5em 0;
   }
 
   nav div a {

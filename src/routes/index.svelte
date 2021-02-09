@@ -31,7 +31,7 @@
 		Writing about software on <a href="/blog">my blog</a>.
 	</p>
 
-	<p>I like simplicity.</p>
+	<p>I like simplicity and solving problems.</p>
 </Layout>
 
 <style>
