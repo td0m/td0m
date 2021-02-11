@@ -3,6 +3,7 @@
   import Prism from "prismjs";
   import "prismjs/components/prism-go";
   import "prismjs/components/prism-sql";
+  import "prismjs/components/prism-bash";
 
   export let lang: string;
   export let value = "";
@@ -13,7 +14,7 @@
 </script>
 
 {#if !inline}
-  <pre><code contenteditable="false" bind:innerHTML={html}>{html}</code></pre>
+  <pre><code class="lang-{lang}" contenteditable="false" bind:innerHTML={html}>{html}</code></pre>
 {:else}
-  <code contenteditable="false" bind:innerHTML={html}>{html}</code>
+  <code class="lang-{lang}" contenteditable="false" bind:innerHTML={html}>{html}</code>
 {/if}
