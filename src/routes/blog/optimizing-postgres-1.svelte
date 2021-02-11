@@ -35,53 +35,64 @@ br.Close()
   description="Performance lesson #1: Avoid network trips"
 >
   <p>
-    There is more to postgres performance than using the <Code inline lang="sql"
-      >EXPLAIN</Code
-    > statement. Today we will try to understand exactly why it's important to avoid unnecessary network trips.
+    There is more to postgres performance than using the <Code
+      inline
+      lang="sql"
+      value="EXPLAIN"
+    /> statement. I ran benchmarks to investigate when you should start batching
+    your queries.
   </p>
-  <h2>My setup</h2>
+  <h2>My hardware</h2>
   <p>
-    The tests were performed on i7-9750H (Laptop CPU) with 16GB of RAM on Fedora 33 and Postgres 13. It shouldn't make much of a difference if you ran the benchmarks on different machine. <br /><br />In this case only the time to make the network request and receive a response will count, so if your postgres database is hosted on a different network with higher latency the differences will be even more extreme.
+    The tests were performed on i7-9750H (Laptop CPU) with 16GB of RAM on Fedora
+    33 and Postgres 13. It shouldn't make much of a difference if you executed
+    the benchmarks on a different machine.
+  </p>
+  <p>
+    In this case, only the time to make the network request and receive a
+    response will count, so if your postgres database is hosted on a different
+    network with higher latency the differences will be even more extreme.
   </p>
   <h2>The problem</h2>
-  <!-- <h2>Lesson for golang users: pgx</h2> -->
-  <!-- <h2>Lesson 1: Always prepare your statements</h2> -->
   <p>Consider the following schema:</p>
   <Code lang="sql" value={create} />
   <p>
-    Let's say you have 1,000 devices in some CSV file. How would you insert these rows? Well, there are 3 ways:
+    Let's say you have 1,000 devices in some CSV file. How would you insert
+    these rows? Well, there are 3 ways:
   </p>
 
   <h3>(Never) Individually</h3>
   <p>
-    Each insert will cause yet another network request to the
-    server, which will be even worse than in the below benchmarks if hosted on a
-    different server/network.
+    Each insert will cause yet another network request to the server, which will
+    be even worse than in the below benchmarks if hosted on a different
+    server/network.
   </p>
   <Code lang="go" value={insertIndividually} />
 
   <h3>(Maybe) Transactions</h3>
   <p>
-    Considerably faster than individual inserts, however you should use batch
-    unless you need any of the features of transactions.
+    Considerably faster than individual inserts, however, you should use batch
+    unless you need any transaction-specific features.
   </p>
-  <Code lang="go" value={insertTx}/>
+  <Code lang="go" value={insertTx} />
 
   <h3>(Prefered) Batch</h3>
   <p>
-    This is a pgx specific feature that pretty much concatinates your queries
+    This is a <a href="https://github.com/jackc/pgx">pgx</a> specific feature that pretty much concatenates your queries
     and allows you to execute and query them separately.
   </p>
   <Code lang="go" value={insertBatch} />
 
   <h2>Benchmarks</h2>
   <p>
-    You will rarely have to insert a thousand rows, but when should you start batching / using transactions? There will be no benefit when inserting a single row:
+    You will rarely have to insert a thousand rows, but when should you start
+    batching / using transactions?
   </p>
 
   <h3>1 query</h3>
   <p>
-    As you can see, it does not make any difference what method we use when we only insert a single row:
+    As you can see, it does not make any difference what method we use when we
+    only insert a single row:
   </p>
   <div class="bars" style="--max: 10" data-label="1ms">
     <div style="--v: 10">Individually</div>
@@ -91,7 +102,8 @@ br.Close()
 
   <h3>3 queries</h3>
   <p>
-    There is some benefit to using transactions and batched queries when you have 2 or 3 queries to execute.
+    There is some benefit to using transactions and batched queries when you
+    have 2 or 3 queries to execute.
   </p>
   <div class="bars" style="--max: 6" data-label="1ms">
     <div style="--v: 6">Individually</div>
@@ -100,19 +112,24 @@ br.Close()
   </div>
 
   <p>
-    Note that somehow the transaction time per individual query went down. This left me confused and thinking my benchmark must be wrong, but it seems Postgres must somehow optimize execution time when queries are sent within a short time frame of each other.
+    Note that somehow the transaction time per individual query went down. This
+    left me confused and thinking my benchmark must be wrong, but it seems
+    Postgres must somehow optimize execution time when queries are sent within a
+    short time frame of each other. It could also be pgx's feature of automatically preparing SQL statements.
   </p>
 
   <h3>1000+ queries</h3>
 
-  <p>As you'd expect, the difference per 1,000+ queries is ever larger. Eventually if we increased the number of queries, the network time will become pretty much negligible and we will approach the raw time taken by Postgres to execute the given query.</p>
+  <p>
+    As you'd expect, the difference per 1,000+ queries is ever larger.
+    Eventually, if we increased the number of queries, the network time will
+    become pretty much negligible and we will approach the raw time taken by
+    Postgres to execute the given query.
+  </p>
 
   <div class="bars" style="--max: 6" data-label="1ms">
     <div style="--v: 6">Individually</div>
     <div style="--v: 0.07">Transactions</div>
     <div style="--v: 0.01">Batch</div>
   </div>
-
-
-
 </Article>
