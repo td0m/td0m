@@ -1,12 +1,6 @@
 <script>
-  import { onMount } from "svelte";
   import Footer from "./Footer.svelte";
   import Nav from "./Nav.svelte";
-
-  onMount(() => {
-    // timeout to fix not loading when navigating from a different page in production
-    setTimeout(() => import("$components/prism.js"), 200);
-  });
 
   function onLoad() {
     this.onload = null;

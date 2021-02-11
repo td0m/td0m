@@ -1,13 +1,19 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import Prism from "prismjs";
+  import "prismjs/components/prism-go";
+  import "prismjs/components/prism-sql";
+
   export let lang: string;
-  export let value: string;
+  export let value = "";
   export let inline: boolean = false;
+
+  $: highlighter = Prism.languages[lang] || Prism.languages["js"];
+  $: html = Prism.highlight(value, highlighter, lang);
 </script>
 
 {#if !inline}
-<pre>
-  <code class="lang-{lang}">{value}</code>
-</pre>
+  <pre><code contenteditable="false" bind:innerHTML={html}>{html}</code></pre>
 {:else}
-  <code class="lang-{lang}">{value}</code>
+  <code contenteditable="false" bind:innerHTML={html}>{html}</code>
 {/if}
