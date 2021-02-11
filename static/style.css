@@ -33,6 +33,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Space mono has some weird ligatures */
+
+* {
+  font-variant-ligatures: none;
+}
+
 *::selection {
   background: var(--app-bg-highlight);
 }
