@@ -1,5 +1,6 @@
 <script>
   import Article from "$components/Article.svelte";
+import Code from "$components/Code.svelte";
 
   const code = `package main
 
@@ -82,7 +83,7 @@ func main() {
 
   <p>Consider the following code snippet:</p>
 
-  <pre><code class="language-go">{code}</code></pre>
+  <Code lang="go" value={code} />
 
   <p>
     It cost me about <code>50kb</code> to highlight this code. Although that's 5
@@ -136,5 +137,8 @@ func main() {
     <li>Code Syntax Highlighting</li>
     <li>Email subscription</li>
     <li>Comments</li>
+    <li>Like button</li>
+    <li>Fancy screenshot copy</li>
+    <li>Next up list</li>
   </ul>
 </Article>
