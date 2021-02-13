@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="" >
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Dominik Tarnowski" />
+  <meta name="theme-color" content="#0d1117">
+  <meta name="dcterms.date" content="2021-02-13" />
+  <meta name="keywords" content="postgres, performance" /> 
+  
+  <title>Optimizing Postgres: Batching - Dominik Tarnowski</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/highlighting.css" />
+  <link rel="stylesheet" href="/static/tinycharts.css" />
+  <link rel="stylesheet" href="/static/blog.css" />
+  
+  
+  
+</head>
+
+<body>
+<div class="container">
+  <nav class="nav">
+    <h1><a href="/">Dom 👋</a></h1>
+    <div>
+      <a href="/blog">Blog</a>
+    </div>
+  </nav>
+</div>
+<div class="container">
+<header class="header">
+  <h1 class="title">Optimizing Postgres: Batching</h1>
+    <p class="description">Performance lesson #1: Avoid network trips</p>
+    </header>
+<details>
+<summary>Table of Contents</summary>
+<nav id="TOC" role="doc-toc">
+    <ul>
+    <li><a href="#my-hardware">My hardware</a></li>
+    <li><a href="#the-problem">The problem</a></li>
+    <li><a href="#never-individually">(Never) Individually</a></li>
+    <li><a href="#maybe-transactions">(Maybe) Transactions</a></li>
+    <li><a href="#prefered-batch">(Prefered) Batch</a></li>
+    <li><a href="#benchmarks">Benchmarks</a>
+    <ul>
+    <li><a href="#query">1 query</a></li>
+    <li><a href="#queries">3 queries</a></li>
+    <li><a href="#queries-1">1000+ queries</a></li>
+    </ul></li>
+    </ul>
+</nav>
+</details>
+<p>There is more to postgres performance than using the <code>EXPLAIN</code> statement. I ran benchmarks to investigate when you should start batching your queries.</p>
+<h1 id="my-hardware">My hardware</h1>
+<p>The tests were performed on i7-9750H (Laptop CPU) with 16GB of RAM on Fedora 33 and Postgres 13. It shouldn’t make much of a difference if you executed the benchmarks on a different machine.</p>
+<p>In this case, only the time to make the network request and receive a response will count, so if your postgres database is hosted on a different network with higher latency the differences will be even more extreme.</p>
+<h1 id="the-problem">The problem</h1>
+<p>Consider the following schema:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> device(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a>  mac MACADDR <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a>  name TEXT</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a>)</span></code></pre></div>
+<p>Let’s say you have 1,000 devices in some CSV file. How would you insert these rows? Well, there are 3 ways:</p>
+<h1 id="never-individually">(Never) Individually</h1>
+<p>Each insert will cause yet another network request to the server, which will be even worse than in the below benchmarks if hosted on a different server/network.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="kw">for</span> _, d := <span class="kw">range</span> devices {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>  db.Exec(ctx, <span class="st">`INSERT INTO device(mac,name) VALUES($1,$2)`</span>, d.Mac, d.Name))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a>}</span></code></pre></div>
+<h1 id="maybe-transactions">(Maybe) Transactions</h1>
+<p>Considerably faster than individual inserts, however, you should use batch unless you need any transaction-specific features.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a>tx, _ := db.Begin(ctx)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="kw">for</span> _, d := <span class="kw">range</span> devices {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a>  tx.Exec(ctx, <span class="st">`INSERT INTO device(mac,name) VALUES($1,$2)`</span>, d.Mac, d.Name)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true"></a>}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true"></a>tx.Commit(ctx)</span></code></pre></div>
+<h1 id="prefered-batch">(Prefered) Batch</h1>
+<p>This is a pgx specific feature that pretty much concatenates your queries and allows you to execute and query them separately.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a>batch := &amp;pgx.Batch{}</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a><span class="kw">for</span> _, d := <span class="kw">range</span> devices {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a>  batch.Queue(<span class="st">`INSERT INTO device(mac,name) VALUES($1,$2)`</span>, d.Mac, d.Name)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a>}</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a>br := db.SendBatch(ctx, batch)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a><span class="kw">for</span> <span class="kw">range</span> devices {</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a>  br.Exec()</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a>}</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a>br.Close()</span></code></pre></div>
+<h1 id="benchmarks">Benchmarks</h1>
+<p>You will rarely have to insert a thousand rows, but when should you start batching / using transactions?</p>
+<h2 id="query">1 query</h2>
+<p>As you can see, it does not make any difference what method we use when we only insert a single row:</p>
+<div class="bars" style="--max: 10" data-label="1ms">
+<div style="--v: 10">
+Individually
+</div>
+<div style="--v: 10">
+Transactions
+</div>
+<div style="--v: 10">
+Batch
+</div>
+</div>
+<h2 id="queries">3 queries</h2>
+<p>There is some benefit to using transactions and batched queries when you have 2 or 3 queries to execute.</p>
+<div class="bars" style="--max: 6" data-label="1ms">
+<div style="--v: 6">
+Individually
+</div>
+<div style="--v: 1.1">
+Transactions
+</div>
+<div style="--v: 0.8">
+Batch
+</div>
+</div>
+<p>Note that somehow the transaction time per individual query went down. This left me confused and thinking my benchmark must be wrong, but it seems Postgres must somehow optimize execution time when queries are sent within a short time frame of each other. It could also be pgx’s feature of automatically preparing SQL statements.</p>
+<h2 id="queries-1">1000+ queries</h2>
+<p>As you’d expect, the difference per 1,000+ queries is ever larger. Eventually, if we increased the number of queries, the network time will become pretty much negligible and we will approach the raw time taken by Postgres to execute the given query.</p>
+<div class="bars" style="--max: 6" data-label="1ms">
+<div style="--v: 6">
+Individually
+</div>
+<div style="--v: 0.07">
+Transactions
+</div>
+<div style="--v: 0.01">
+Batch
+</div>
+</div>
+<form action="https://dev.us1.list-manage.com/subscribe/post?u=8b92e820e340a07c112007601&amp;id=c64f13116d"
+  method="post" target="_blank" novalidate>
+  <div>
+
+  <h2 style="margin-bottom: 0;">Subscribe</h2>
+  <p style="margin: 0 0 15px">
+    Get notified when I release new articles. No spam.
+  </p>
+  <div class="card flex">
+    <input type="email" placeholder="email" value="" name="EMAIL" />
+    <!-- bot signup prevention -->
+    <div style="position: absolute; left: -5000px;" aria-hidden="true">
+      <input type="text" name="b_8b92e820e340a07c112007601_c64f13116d" tabindex="-1" value="" />
+    </div>
+    <input type="submit" value="Subscribe" name="subscribe" />
+  </div>
+  </div>
+</form>
+
+<!--End mc_embed_signup-->
+<style>
+  form {
+    margin: 30px 0;
+    padding: 10px 0;
+    background: #76a9fa;
+    background-color: transparent;
+    border-top: solid 1px var(--app-bg-alt);
+  }
+
+  .card>* {
+    flex-grow: 1;
+  }
+
+  .card input[type="email"] {
+    flex-grow: 15;
+    border: solid 2px var(--app-bg-alt);
+    border-top-left-radius: var(--r);
+    border-bottom-left-radius: var(--r);
+  }
+
+  .card {
+    --r: 8px;
+    border-radius: var(--r);
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    text-transform: uppercase;
+  }
+
+  input {
+    border: none;
+    background: transparent !important;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    padding: 10px;
+  }
+
+  input[type="submit"] {
+    border-top-right-radius: var(--r);
+    border-bottom-right-radius: var(--r);
+    background: var(--palette-link-c) !important;
+    font-weight: 600;
+  }
+</style>
+</div>
+
+<script src="/static/tinycharts.js"></script>
+</body>
+
+</html>

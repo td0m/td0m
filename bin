@@ -1,0 +1,18 @@
+#!/bin/bash
+
+pandoc "index.md" -o "build/index.html" \
+  --template template.html \
+  --css static/styles.css \
+  --css static/blog.css
+
+for f in ./blog/*.md; do
+  pandoc "$f" -o "build/${f%.*}.html" \
+    --toc \
+    --template template.html \
+    --css /static/styles.css \
+    --css /static/highlighting.css \
+    --css /static/tinycharts.css \
+    --css /static/blog.css \
+    -A subscribe.html
+done
+

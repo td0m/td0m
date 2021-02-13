@@ -1,0 +1,20 @@
+:root {
+  font-size: 18px;
+  /* font-family: monospace; */
+}
+
+pre {
+  padding: 15px;
+  border-radius: 5px;
+  color: var(--app-c-alt);
+  border: solid 2px var(--app-bg-alt);
+}
+
+.title {
+  margin-bottom: 0.5rem;
+}
+
+.description {
+  margin-top: 0;
+  font-size: 1.2rem;
+}

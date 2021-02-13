@@ -1,6 +1,0 @@
- - Fix blog list on mobile
- - Add /projects page
- - Export bars to its own project
- - Add more examples to css
- - Build Tinyanalytics
- - Move pure css charts to /projects
