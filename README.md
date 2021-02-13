@@ -3,8 +3,10 @@ title: Dominik Tarnowski
 ---
 
 <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-<img src="/static/pc.gif" height="50px" width="50px">
-<samp>
+<p align="center">
+  <img align="center" src="https://tdom.dev/static/pc.gif" height="50px" width="50px">
+</p>
+<samp align="center">
 <p style="margin-bottom: 0">Hi, I'm</p>
 <h1 style="margin: 0;">Dominik Tarnowski</h1>
 <p style="margin-top: 0"><a href="https://southampton.ac.uk">Southampton</a>, UK</p>

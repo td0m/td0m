@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pandoc "index.md" -o "build/index.html" \
+pandoc "README.md" -o "build/index.html" \
   --template template.html \
   --css static/styles.css \
   --css static/blog.css
