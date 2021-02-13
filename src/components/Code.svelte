@@ -14,7 +14,7 @@
 </script>
 
 {#if !inline}
-  <pre><code class="lang-{lang}" contenteditable="false" bind:innerHTML={html}>{html}</code></pre>
+  <pre><code class="lang-{lang}" contenteditable="false" bind:innerHTML={html} /></pre>
 {:else}
-  <code class="lang-{lang}" contenteditable="false" bind:innerHTML={html}>{html}</code>
+  <code class="lang-{lang}" contenteditable="false" bind:innerHTML={html} />
 {/if}

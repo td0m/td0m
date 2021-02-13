@@ -4,6 +4,12 @@
 
   const articles = [
     {
+      date: new Date("2021-02-08"),
+      url: "/blog/css-charts",
+      title: "Pure CSS Charts",
+      description: "You don't need a large library to render basic charts",
+    },
+    {
       date: new Date("2021-02-11"),
       url: "/blog/optimizing-postgres-1",
       title: "Optimizing Postgres: Batching",

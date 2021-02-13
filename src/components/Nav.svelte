@@ -3,8 +3,8 @@
     <a href="/">Dom 👋</a>
   </h1>
   <div>
-    <a href="/">Home</a>
     <a href="/blog">Blog</a>
+    <a href="/projects">Projects</a>
   </div>
 </nav>
 
